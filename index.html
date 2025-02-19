@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Безпечний чат</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+</head>
+<body>
+<div class="fixed bottom-2 right-2 h-[600px] w-[400px] bg-black p-3 rounded-t-4xl rounded-b-xl">
+    <div class="flex flex-row gap-3 overflow-x-scroll whitespace-nowrap pb-3 scroll-smooth rounded-3xl">
+        <img class="h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="1" data-type="User">
+        <img class="h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="1" data-type="User">
+        <img class="h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="1" data-type="User">
+        <img class="h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="1" data-type="User">
+        <img class="h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="1" data-type="User">
+        <img class="h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="1" data-type="User">
+        <img class="h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="1" data-type="User">
+        <img class="h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="1" data-type="User">
+        <img class="h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="1" data-type="User">
+        <img class="h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="1" data-type="User">
+        <img class="h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="1" data-type="User">
+    </div>
+    <div id="messenger" class="mt-1 flex flex-col rounded-lg h-[500px]">
+        <div id="messages" class="bg-white flex-grow rounded-lg">
+            asdas
+        </div>
+        <div id="chat" class="flex flex-row gap-1 rounded-3xl mt-2">
+            <textarea class="bg-white w-full">asd</textarea>
+            <button type="submit" class="bg-white w-[30px]">
+                +
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+    const socket = io('http://localhost:3000');
+
+    let privateKey, publicKey;
+
+    async function generateKeyPair() {
+        const keyPair = await window.crypto.subtle.generateKey(
+            {
+                name: "RSA-OAEP",
+                modulusLength: 2048,
+                publicExponent: new Uint8Array([1, 0, 1]),
+                hash: "SHA-256"
+            },
+            true,
+            ["encrypt", "decrypt"]
+        );
+
+        publicKey = keyPair.publicKey;
+        privateKey = keyPair.privateKey;
+        console.log("🔑 Ключі згенеровано!");
+    }
+
+    async function exportPublicKey(key) {
+        const exported = await window.crypto.subtle.exportKey("spki", key);
+        return btoa(String.fromCharCode(...new Uint8Array(exported)));
+    }
+
+    async function registerUser() {
+        await generateKeyPair();
+        const userId = document.getElementById("userId").value;
+        socket.emit("register", userId);
+    }
+
+    async function encryptMessage(publicKey, message) {
+        const encoded = new TextEncoder().encode(message);
+        const encrypted = await window.crypto.subtle.encrypt(
+            {name: "RSA-OAEP"},
+            publicKey,
+            encoded
+        );
+        return btoa(String.fromCharCode(...new Uint8Array(encrypted))); // Base64
+    }
+
+    async function decryptMessage(encryptedMessage) {
+        const binary = Uint8Array.from(atob(encryptedMessage), c => c.charCodeAt(0));
+        const decrypted = await window.crypto.subtle.decrypt(
+            {name: "RSA-OAEP"},
+            privateKey,
+            binary
+        );
+        return new TextDecoder().decode(decrypted);
+    }
+
+    async function sendMessage() {
+        const recipientId = document.getElementById("recipientId").value;
+        const message = document.getElementById("message").value;
+        const encryptedMessage = await encryptMessage(publicKey, message);
+        socket.emit("sendMessage", {recipientId, encryptedMessage});
+
+        document.getElementById("chat").innerHTML += `<p><b>Ви:</b> 🔒 ${encryptedMessage}</p>`;
+    }
+
+    socket.on("receiveMessage", async (data) => {
+        const decryptedMessage = await decryptMessage(data.encryptedMessage);
+        document.getElementById("chat").innerHTML += `<p><b>Отримано:</b> ${decryptedMessage}</p>`;
+    });
+</script>
+</body>
+</html>
