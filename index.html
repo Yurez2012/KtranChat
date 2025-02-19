@@ -10,34 +10,91 @@
 <body>
 <div class="fixed bottom-2 right-2 h-[600px] w-[400px] bg-black p-3 rounded-t-4xl rounded-b-xl">
     <div class="flex flex-row gap-3 overflow-x-scroll whitespace-nowrap pb-3 scroll-smooth rounded-3xl">
-        <img class="h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="1" data-type="User">
-        <img class="h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="1" data-type="User">
-        <img class="h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="1" data-type="User">
-        <img class="h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="1" data-type="User">
-        <img class="h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="1" data-type="User">
-        <img class="h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="1" data-type="User">
-        <img class="h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="1" data-type="User">
-        <img class="h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="1" data-type="User">
-        <img class="h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="1" data-type="User">
-        <img class="h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="1" data-type="User">
-        <img class="h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="1" data-type="User">
+        <img class="chat-user h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="1" data-type="User">
+        <img class="chat-user h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="2" data-type="User">
+        <img class="chat-user h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="3" data-type="User">
+        <img class="chat-user h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="4" data-type="User">
+        <img class="chat-user h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="5" data-type="User">
+        <img class="chat-user h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="6" data-type="User">
+        <img class="chat-user h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="7" data-type="User">
+        <img class="chat-user h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="8" data-type="User">
+        <img class="chat-user h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="9" data-type="User">
+        <img class="chat-user h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="10" data-type="User">
+        <img class="chat-user h-[60px] w-[60px] rounded-full bg-white shrink-0" src="img.jpg" data-id="11" data-type="User">
     </div>
     <div id="messenger" class="mt-1 flex flex-col rounded-lg h-[500px]">
-        <div id="messages" class="bg-white flex-grow rounded-lg">
-            asdas
+        <div id="messages" class="bg-white flex-grow rounded-lg p-2">
+
         </div>
-        <div id="chat" class="flex flex-row gap-1 rounded-3xl mt-2">
-            <textarea class="bg-white w-full">asd</textarea>
-            <button type="submit" class="bg-white w-[30px]">
-                +
-            </button>
+        <div class="rounded-3xl mt-2">
+            <form id="chat" class="flex flex-row gap-1">
+                <input type="hidden" name="sender_id" value="1">
+                <input type="hidden" name="sender_type" value="Admin">
+                <input type="hidden" name="receiver_id" value="">
+                <input type="hidden" name="receiver_type" value="">
+                <textarea class="bg-white w-full p-1" name="message"></textarea>
+                <button type="submit" class="bg-white w-[30px]">
+                    +
+                </button>
+            </form>
         </div>
     </div>
 </div>
 <script>
+
+
     const socket = io('http://localhost:3000');
 
     let privateKey, publicKey;
+
+    function playNotificationSound() {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Перша частина - "тін"
+        const tinOscillator = audioCtx.createOscillator();
+        tinOscillator.type = "sine"; // М'який звук
+        tinOscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // Частота для "тін"
+        tinOscillator.connect(audioCtx.destination);
+        tinOscillator.start();
+        tinOscillator.stop(audioCtx.currentTime + 0.2); // Тривалість 200 мс
+
+        // Друга частина - "там"
+        const tamOscillator = audioCtx.createOscillator();
+        tamOscillator.type = "sine"; // М'який звук
+        tamOscillator.frequency.setValueAtTime(600, audioCtx.currentTime + 0.2); // Знижена частота для "там"
+        tamOscillator.connect(audioCtx.destination);
+        tamOscillator.start(audioCtx.currentTime + 0.2);
+        tamOscillator.stop(audioCtx.currentTime + 0.4); // Тривалість 200 мс
+    }
+
+    document.getElementById('chat').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const formData = {
+            sender_id: document.querySelector('[name="sender_id"]').value,
+            sender_type: document.querySelector('[name="sender_type"]').value,
+            receiver_id: document.querySelector('[name="receiver_id"]').value,
+            receiver_type: document.querySelector('[name="receiver_type"]').value,
+            message: document.querySelector('[name="message"]').value.trim()
+        };
+
+        if (!formData.message) return; // Перевіряємо, чи не порожнє повідомлення
+
+        socket.emit('sendMessage', formData); // Відправляємо через WebSocket
+        playNotificationSound();
+        document.querySelector('[name="message"]').value = ''; // Очищаємо поле
+    });
+
+    document.querySelectorAll('.chat-user').forEach(user => {
+        user.addEventListener('click', function() {
+            const userId = this.getAttribute('data-id');
+            const userType = this.getAttribute('data-type');
+
+            document.querySelector('[name="receiver_id"]').value = userId;
+            document.querySelector('[name="receiver_type"]').value = userType;
+        });
+    });
+
 
     async function generateKeyPair() {
         const keyPair = await window.crypto.subtle.generateKey(
@@ -53,7 +110,6 @@
 
         publicKey = keyPair.publicKey;
         privateKey = keyPair.privateKey;
-        console.log("🔑 Ключі згенеровано!");
     }
 
     async function exportPublicKey(key) {
@@ -66,6 +122,11 @@
         const userId = document.getElementById("userId").value;
         socket.emit("register", userId);
     }
+
+    socket.on("receiveMessage", async (data) => {
+        const decryptedMessage = await decryptMessage(data.encryptedMessage);
+        document.getElementById("chat").innerHTML += `<p><b>Отримано:</b> ${decryptedMessage}</p>`;
+    });
 
     async function encryptMessage(publicKey, message) {
         const encoded = new TextEncoder().encode(message);
@@ -86,20 +147,6 @@
         );
         return new TextDecoder().decode(decrypted);
     }
-
-    async function sendMessage() {
-        const recipientId = document.getElementById("recipientId").value;
-        const message = document.getElementById("message").value;
-        const encryptedMessage = await encryptMessage(publicKey, message);
-        socket.emit("sendMessage", {recipientId, encryptedMessage});
-
-        document.getElementById("chat").innerHTML += `<p><b>Ви:</b> 🔒 ${encryptedMessage}</p>`;
-    }
-
-    socket.on("receiveMessage", async (data) => {
-        const decryptedMessage = await decryptMessage(data.encryptedMessage);
-        document.getElementById("chat").innerHTML += `<p><b>Отримано:</b> ${decryptedMessage}</p>`;
-    });
 </script>
 </body>
 </html>

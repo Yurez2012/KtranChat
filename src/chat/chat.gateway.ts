@@ -1,4 +1,10 @@
-import { WebSocketGateway, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
+import {
+    WebSocketGateway,
+    WebSocketServer,
+    OnGatewayConnection,
+    OnGatewayDisconnect,
+    SubscribeMessage
+} from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
 @WebSocketGateway({cors: '*'})
@@ -18,5 +24,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     handleDisconnect(socket: Socket) {
         console.log('User disconnected:', socket.id);
+    }
+
+    @SubscribeMessage('sendMessage')
+    handleMessage(client: Socket, payload: { sender_id: string, sender_type: string, receiver_id: string, receiver_type: string, message: string }) {
+        console.log('Отримано повідомлення:', payload);
     }
 }
